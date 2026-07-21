@@ -21,6 +21,14 @@ on:
         options:
           - debug
           - info
+      repoCache:
+        description: Repository cache
+        type: choice
+        default: enabled
+        options:
+          - enabled
+          - disabled
+          - reset
 
 permissions:
   contents: read
@@ -28,8 +36,9 @@ permissions:
 jobs:
   renovate:
     name: Renovate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
+      contents: read
       packages: read
     steps:
       - name: Checkout
@@ -43,7 +52,7 @@ jobs:
         with:
           client-id: ${{ secrets.BOT_CLIENT_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }} # zizmor: ignore[github-app] org-wide access is required for Renovate autodiscover
+          owner: ${{ github.repository_owner }}
           permission-checks: write
           permission-contents: write
           permission-issues: write
@@ -52,6 +61,20 @@ jobs:
           permission-statuses: write
           permission-vulnerability-alerts: read
           permission-workflows: write
+
+      - name: Restore Renovate repository cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /tmp/renovate/cache/renovate/repository
+          key: renovate-repository-cache-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: renovate-repository-cache-
+
+      - name: Align cache ownership for the Renovate container
+        run: |
+          sudo mkdir -p /tmp/renovate/cache/renovate/repository
+          # Renovate runs in its container as uid 12021; give it ownership so it
+          # can read and rewrite the restored cache.
+          sudo chown -R 12021:0 /tmp/renovate
 
       - name: Renovate
         uses: renovatebot/github-action@3064367f740a1a91cca218698a63902689cce200 # v46.1.20
@@ -72,3 +95,10 @@ jobs:
           docker-cmd-file: .github/renovate-entrypoint.sh
           docker-user: root
           token: ${{ steps.app-token.outputs.token }}
+
+      - name: Save Renovate repository cache
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /tmp/renovate/cache/renovate/repository
+          key: renovate-repository-cache-${{ github.run_id }}-${{ github.run_attempt }}
