@@ -39,7 +39,17 @@ stage_fixed = true
 
 [pre-commit.commands.mise-lock]
 glob = [".mise.toml", ".mise/config.toml"]
-run = 'mise lock && { for f in {staged_files}; do l="$(dirname "$f")/mise.lock"; [ -f "$l" ] && git add "$l"; done; true; }'
+
+[pre-commit.commands.actionlint]
+glob = [".github/workflows/*.yaml"]
+run = '''
+actionlint -shellcheck= \
+  -ignore 'unexpected key "(background|cancel|parallel|wait|wait-all)" for step' \
+  -ignore 'step must run script with "run" section or run action with "uses" section' \
+  -ignore 'specifying action "\$/.*" in invalid format because ref is missing' \
+  -ignore 'reusable workflow call "\$/.*" at "uses" is not following the format' \
+  {staged_files}
+'''
 
 [pre-commit.commands.shellcheck]
 glob = ["*.sh"]
