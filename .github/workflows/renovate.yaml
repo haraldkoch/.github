@@ -1,6 +1,7 @@
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Renovate
+run-name: Renovate (${{ (inputs.autodiscoverFilter == '*' && 'all repos') || inputs.autodiscoverFilter || 'all repos' }})
 
 on:
   workflow_dispatch:
@@ -32,6 +33,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
 
 jobs:
   renovate:
@@ -77,7 +82,7 @@ jobs:
           sudo chown -R 12021:0 /tmp/renovate
 
       - name: Renovate
-        uses: renovatebot/github-action@316d7cd859606d6039a2182b7d69199e9b036835 # v46.2.1
+        uses: renovatebot/github-action@e09d604f8f803bb527bd8321ed5be06c460b8682 # v46.2.2
         env:
           LOG_LEVEL: ${{ inputs.logLevel || 'debug' }}
           RENOVATE_DRY_RUN: ${{ inputs.dryRun == true }}
@@ -88,7 +93,7 @@ jobs:
           RENOVATE_PLATFORM_COMMIT: true
           RENOVATE_CUSTOM_ENV_VARIABLES: '{"MISE_TRUSTED_CONFIG_PATHS":"/tmp/renovate/repos"}'
           RENOVATE_ALLOWED_UNSAFE_EXECUTIONS: '["goGenerate", "mise"]'
-          RENOVATE_ALLOWED_COMMANDS: '["^helm-docs ", "^helm-schema ", "^npm ci", "^npm run build"]'
+          RENOVATE_ALLOWED_COMMANDS: '["^helm-docs ", "^helm-schema ", "^npm "]'
           RENOVATE_REPOSITORY_CACHE: ${{ inputs.repoCache || 'enabled' }}
           RENOVATE_PRESET_CACHE_PERSISTENCE: "true"
         with:
