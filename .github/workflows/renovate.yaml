@@ -61,7 +61,6 @@ jobs:
           permission-checks: write
           permission-contents: write
           permission-issues: write
-          permission-members: read
           permission-pull-requests: write
           permission-statuses: write
           permission-vulnerability-alerts: read
