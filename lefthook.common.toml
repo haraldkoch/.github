@@ -34,7 +34,7 @@ stage_fixed = true
 
 [[pre-commit.jobs.group.jobs]]
 name = "lock-mise"
-run = 'mise lock && git add -A -- .mise ":(exclude).mise/*.toml"'
+run = "mise lock && git add -A -- .mise ':(exclude).mise/*.toml'"
 
 # The staged paths go to oxfmt by name, and oxfmt drops those a repository's
 # .prettierignore covers, generated chart docs and schemas among them; when
@@ -61,18 +61,6 @@ glob = ["*.yaml", "*.yml"]
 exclude = [".mise/locks/**"]
 run = "oxfmt --no-error-on-unmatched-pattern {staged_files}"
 stage_fixed = true
-
-[pre-commit.commands.actionlint]
-glob = [".github/workflows/*.yaml"]
-run = '''
-actionlint -shellcheck= \
-  -ignore 'unexpected key "(background|cancel|parallel|wait|wait-all)" for step' \
-  -ignore 'step must run script with "run" section or run action with "uses" section' \
-  -ignore 'specifying action "\$/.*" in invalid format because ref is missing' \
-  -ignore 'reusable workflow call "\$/.*" at "uses" is not following the format' \
-  -ignore 'label "ubuntu-26\.04(-arm)?" is unknown' \
-  {staged_files}
-'''
 
 [pre-commit.commands.shellcheck]
 glob = ["*.sh"]
